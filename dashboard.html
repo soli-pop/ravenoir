@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ravenoir ▸ Obsidian Archive</title>
+  <link rel="icon" type="image/png" href="assets/rlogo.png" />
+  <link rel="apple-touch-icon" href="assets/rlogo.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Courier+Prime:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    /* ─── TOKENS ───────────────────────────────────────────── */
+    :root {
+      --charcoal:    #1A1D1F;
+      --charcoal-2:  #22262A;
+      --charcoal-3:  #2C3137;
+      --silver:      #C0C0C0;
+      --silver-dim:  #7A7A7A;
+      --silver-hi:   #E8E8E8;
+      --plum:        #4B0082;
+      --plum-dim:    #380060;
+      --plum-glow:   rgba(75,0,130,0.5);
+      --plum-faint:  rgba(75,0,130,0.15);
+      --green:       #00c07a;
+      --danger:      #8B1A1A;
+      --fw-mono:     'Share Tech Mono', monospace;
+      --fw-serif:    'Cormorant Garamond', Georgia, serif;
+      --fw-display:  'Cinzel', serif;
+      --fw-code:     'Courier Prime', monospace;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--charcoal);
+      color: var(--silver);
+      font-family: var(--fw-serif);
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Grain overlay */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.72' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      opacity: 0.07; mix-blend-mode: overlay;
+      pointer-events: none; z-index: 0;
+    }
+    /* Weave + vignette */
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background-image:
+        repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(192,192,192,0.01) 3px, rgba(192,192,192,0.01) 4px),
+        repeating-linear-gradient(90deg, transparent, transparent 3px, rgba(192,192,192,0.01) 3px, rgba(192,192,192,0.01) 4px),
+        radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.55) 100%);
+      pointer-events: none; z-index: 0;
+    }
+
+    /* ─── TOP NAV ──────────────────────────────────────────── */
+    .topnav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(26,29,31,0.96);
+      border-bottom: 1px solid rgba(192,192,192,0.15);
+      backdrop-filter: blur(8px);
+      display: flex; align-items: center;
+      padding: 0 24px;
+      height: 52px;
+      gap: 0;
+    }
+    .topnav-logo {
+      display: flex; align-items: center; gap: 10px;
+      text-decoration: none;
+      flex-shrink: 0;
+    }
+    .topnav-logo img {
+      width: 30px; height: 30px;
+      object-fit: contain;
+      filter: drop-shadow(0 0 4px rgba(192,192,192,0.2));
+    }
+    .topnav-logo-text {
+      font-family: var(--fw-display);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.3em;
+      color: var(--silver-hi);
+      text-transform: uppercase;
+    }
+    .topnav-divider {
+      width: 1px; height: 24px;
+      background: rgba(192,192,192,0.15);
+      margin: 0 18px;
+    }
+    .topnav-tabs {
+      display: flex; align-items: center;
+      gap: 2px;
+      flex: 1;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .topnav-tabs::-webkit-scrollbar { display: none; }
+    .topnav-tab {
+      font-family: var(--fw-mono);
+      font-size: 9px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--silver-dim);
+      padding: 6px 14px;
+      cursor: pointer;
+      border: none; background: transparent;
+      white-space: nowrap;
+      position: relative;
+      transition: color 0.2s;
+    }
+    .topnav-tab::after {
+      content: '';
+      position: absolute; bottom: -1px; left: 0; right: 0;
+      height: 2px; background: var(--plum);
+      transform: scaleX(0);
+      transition: transform 0.25s;
+    }
+    .topnav-tab:hover { color: var(--silver); }
+    .topnav-tab.active { color: var(--silver-hi); }
+    .topnav-tab.active::after { transform: scaleX(1); }
+
+    .topnav-right {
+      display: flex; align-items: center; gap: 14px;
+      flex-shrink: 0; margin-left: auto;
+    }
+    .topnav-operative {
+      font-family: var(--fw-mono);
+      font-size: 8px;
+      letter-spacing: 0.15em;
+      color: var(--silver-dim);
+      text-transform: uppercase;
+    }
+    .topnav-operative span {
+      color: var(--green);
+    }
+    .topnav-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 6px var(--green);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity: 1; }
+      50%      { opacity: 0.4; }
+    }
+    .topnav-logout {
+      font-family: var(--fw-mono);
+      font-size: 8px;
+      letter-spacing: 0.15em;
+      color: var(--silver-dim);
+      text-transform: uppercase;
+      background: transparent;
+      border: 1px solid rgba(192,192,192,0.18);
+      padding: 5px 10px;
+      cursor: pointer;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .topnav-logout:hover { color: var(--silver); border-color: var(--silver-dim); }
+
+    /* ─── PAGE WRAPPER ─────────────────────────────────────── */
+    .page-wrap {
+      position: relative; z-index: 1;
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 28px 20px 60px;
+    }
+
+    /* ─── SECTION HEADER ───────────────────────────────────── */
+    .section-header {
+      display: flex; align-items: center; gap: 14px;
+      margin-bottom: 28px;
+    }
+    .section-header-line {
+      flex: 1; height: 1px;
+      background: linear-gradient(90deg, rgba(192,192,192,0.3), transparent);
+    }
+    .section-header-line.right {
+      background: linear-gradient(90deg, transparent, rgba(192,192,192,0.3));
+    }
+    .section-header-label {
+      font-family: var(--fw-mono);
+      font-size: 9px;
+      letter-spacing: 0.28em;
+      color: var(--silver-dim);
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    /* ─── POST FEED ────────────────────────────────────────── */
+    .feed { display: flex; flex-direction: column; gap: 28px; }
+
+    /* Post slide-in animation */
+    .post {
+      opacity: 0;
+      transform: translateY(24px);
+      animation: slideUp 0.55s cubic-bezier(0.22,1,0.36,1) forwards;
+    }
+    .post:nth-child(1) { animation-delay: 0.05s; }
+    .post:nth-child(2) { animation-delay: 0.15s; }
+    .post:nth-child(3) { animation-delay: 0.25s; }
+    .post:nth-child(4) { animation-delay: 0.35s; }
+    .post:nth-child(5) { animation-delay: 0.45s; }
+    @keyframes slideUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       LAYOUT 1 — DOSSIER (Personnel)
+    ═══════════════════════════════════════════════════════ */
+    .dossier {
+      border: 1px solid rgba(192,192,192,0.2);
+      background: var(--charcoal-2);
+      position: relative;
+      overflow: hidden;
+    }
+    /* Clipped corner */
+    .dossier::after {
+      content: '';
+      position: absolute; top: -1px; right: -1px;
+      width: 0; height: 0;
+      border-style: solid;
+      border-width: 0 24px 24px 0;
+      border-color: transparent var(--charcoal) transparent transparent;
+    }
+
+    .dossier-stripe {
+      height: 36px;
+      background: repeating-linear-gradient(-45deg,
+        var(--charcoal-3) 0px, var(--charcoal-3) 10px,
+        var(--charcoal-2) 10px, var(--charcoal-2) 20px);
+      border-bottom: 1px solid rgba(192,192,192,0.15);
+      display: flex; align-items: center;
+      padding: 0 16px; gap: 12px;
+    }
+    .dossier-stripe-tag {
+      font-family: var(--fw-mono); font-size: 8px;
+      letter-spacing: 0.22em; color: var(--silver-dim);
+      text-transform: uppercase;
+      background: var(--charcoal-2); padding: 2px 8px;
+    }
+    .dossier-stripe-id {
+      font-family: var(--fw-mono); font-size: 8px;
+      letter-spacing: 0.15em; color: var(--silver-dim);
+      margin-left: auto;
+    }
+
+    .dossier-body {
+      display: grid;
+      grid-template-columns: 180px 1fr;
+      gap: 0;
+    }
+
+    /* Portrait column */
+    .dossier-portrait {
+      position: relative;
+      background: #0d0f11;
+      border-right: 1px solid rgba(192,192,192,0.12);
+      min-height: 240px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .dossier-portrait img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+      filter: grayscale(30%) contrast(1.05);
+    }
+    .dossier-portrait-placeholder {
+      width: 100%; height: 240px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 10px;
+      color: var(--silver-dim);
+    }
+    .dossier-portrait-placeholder svg { opacity: 0.3; }
+    .dossier-portrait-placeholder-text {
+      font-family: var(--fw-mono); font-size: 7px;
+      letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.4;
+    }
+
+    /* Scanning reticle */
+    .reticle {
+      position: absolute; inset: 0;
+      pointer-events: none;
+    }
+    .reticle-corner {
+      position: absolute;
+      width: 14px; height: 14px;
+      border-color: rgba(192,192,192,0.5);
+      border-style: solid;
+    }
+    .reticle-corner.tl { top: 8px; left: 8px; border-width: 1.5px 0 0 1.5px; }
+    .reticle-corner.tr { top: 8px; right: 8px; border-width: 1.5px 1.5px 0 0; }
+    .reticle-corner.bl { bottom: 8px; left: 8px; border-width: 0 0 1.5px 1.5px; }
+    .reticle-corner.br { bottom: 8px; right: 8px; border-width: 0 1.5px 1.5px 0; }
+    .reticle-scan {
+      position: absolute; left: 0; right: 0;
+      height: 1.5px;
+      background: linear-gradient(90deg, transparent 0%, rgba(192,192,192,0.6) 40%, rgba(255,255,255,0.8) 50%, rgba(192,192,192,0.6) 60%, transparent 100%);
+      box-shadow: 0 0 6px rgba(192,192,192,0.4);
+      animation: reticleScan 3s ease-in-out infinite;
+    }
+    @keyframes reticleScan {
+      0%   { top: 10%; opacity: 0; }
+      10%  { opacity: 1; }
+      90%  { opacity: 1; }
+      100% { top: 90%; opacity: 0; }
+    }
+
+    .dossier-status-badge {
+      position: absolute; bottom: 8px; left: 8px;
+      font-family: var(--fw-mono); font-size: 7px;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      background: rgba(0,192,122,0.15);
+      border: 1px solid var(--green);
+      color: var(--green);
+      padding: 3px 8px;
+      display: flex; align-items: center; gap: 5px;
+    }
+    .dossier-status-dot {
+      width: 4px; height: 4px; border-radius: 50%;
+      background: var(--green); box-shadow: 0 0 4px var(--green);
+      animation: pulse 1.8s ease-in-out infinite;
+    }
+
+    /* Data column */
+    .dossier-data {
+      padding: 20px 20px 20px 20px;
+      display: flex; flex-direction: column; gap: 0;
+    }
+    .dossier-name {
+      font-family: var(--fw-display);
+      font-size: 18px; font-weight: 700;
+      letter-spacing: 0.15em; color: var(--silver-hi);
+      text-transform: uppercase;
+      margin-bottom: 16px;
+      line-height: 1.2;
+    }
+
+    .dossier-field {
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(192,192,192,0.08);
+      display: flex; flex-direction: column; gap: 3px;
+    }
+    .dossier-field:last-child { border-bottom: none; }
+    .dossier-field-label {
+      font-family: var(--fw-mono); font-size: 7px;
+      letter-spacing: 0.25em; color: var(--silver-dim);
+      text-transform: uppercase;
+    }
+    .dossier-field-value {
+      font-family: var(--fw-code); font-size: 13px;
+      letter-spacing: 0.06em; color: var(--silver);
+      line-height: 1.4;
+    }
+    .dossier-field-value.threat-critical { color: #c04040; }
+    .dossier-field-value.threat-moderate  { color: #c08840; }
+    .dossier-field-value.threat-low       { color: var(--green); }
+    .dossier-field-value.clearance-high   { color: var(--plum); letter-spacing: 0.12em; }
+
+    .dossier-footer {
+      border-top: 1px solid rgba(192,192,192,0.1);
+      padding: 8px 16px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .dossier-footer-code {
+      font-family: var(--fw-mono); font-size: 7px;
+      letter-spacing: 0.14em; color: var(--silver-dim); opacity: 0.5;
+    }
+    .post-meta-row {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .post-meta-avatar {
+      width: 20px; height: 20px; border-radius: 50%;
+      border: 1px solid rgba(192,192,192,0.2);
+      background: var(--charcoal-3);
+      overflow: hidden; flex-shrink: 0;
+    }
+    .post-meta-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .post-meta-text {
+      font-family: var(--fw-mono); font-size: 7px;
+      letter-spacing: 0.14em; color: var(--silver-dim); opacity: 0.6;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       LAYOUT 2 — ENCRYPTED LOG (Story & Lore)
+    ═══════════════════════════════════════════════════════ */
+    .log {
+      border: 1px solid rgba(192,192,192,0.2);
+      background: var(--charcoal-2);
+      position: relative;
+    }
+    .log::before {
+      content: '';
+      position: absolute; top: -1px; right: -1px;
+      width: 0; height: 0;
+      border-style: solid;
+      border-width: 0 24px 24px 0;
+      border-color: transparent var(--charcoal) transparent transparent;
+    }
+
+    .log-header {
+      padding: 16px 20px 0;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .log-grade-tag {
+      display: inline-flex; align-items: center; gap: 10px;
+    }
+    .log-mil-badge {
+      background: var(--silver-hi); color: #0D0F11;
+      font-family: var(--fw-mono); font-size: 9px;
+      font-weight: 700; letter-spacing: 0.2em;
+      text-transform: uppercase;
+      padding: 3px 10px;
+    }
+    .log-grade-text {
+      font-family: var(--fw-mono); font-size: 9px;
+      letter-spacing: 0.2em; color: var(--silver-dim);
+      text-transform: uppercase;
+    }
+
+    .log-meta-bar {
+      display: flex; align-items: center; gap: 16px;
+      flex-wrap: wrap;
+      padding: 8px 0;
+      border-top: 1px solid rgba(192,192,192,0.08);
+      border-bottom: 1px solid rgba(192,192,192,0.08);
+    }
+    .log-meta-item {
+      font-family: var(--fw-mono); font-size: 8px;
+      letter-spacing: 0.16em; color: var(--silver-dim);
+      text-transform: uppercase;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .log-meta-item span { color: var(--silver); }
+
+    .log-title {
+      font-family: var(--fw-display);
+      font-size: 22px; font-weight: 700;
+      letter-spacing: 0.12em; color: var(--silver-hi);
+      text-transform: uppercase;
+      line-height: 1.25;
+      padding: 14px 20px 0;
+    }
+
+    .log-body {
+      padding: 14px 20px 20px;
+      font-family: var(--fw-serif);
+      font-size: 16px; line-height: 1.85;
+      color: rgba(192,192,192,0.82);
+    }
+    .log-body p { margin-bottom: 14px; }
+    .log-body p:last-child { margin-bottom: 0; }
+
+    /* Redacted text effect */
+    .redacted {
+      background: var(--silver);
+      color: transparent;
+      cursor: pointer;
+      border-radius: 1px;
+      transition: background 0.3s, color 0.3s;
+      padding: 0 3px;
+      user-select: none;
+    }
+    .redacted:hover, .redacted.revealed {
+      background: var(--plum-faint);
+      color: var(--silver-hi);
+      border: 1px solid var(--plum);
+    }
+
+    .log-attachment {
+      margin: 0 20px 18px;
+      border: 1px solid rgba(192,192,192,0.12);
+      background: var(--charcoal-3);
+      display: flex; align-items: center;
+      gap: 14px; padding: 12px 14px;
+    }
+    .log-attachment-thumb {
+      width: 60px; height: 60px;
+      border: 1px solid rgba(192,192,192,0.18);
+      background: #0D0F11;
+      overflow: hidden; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .log-attachment-thumb img {
+      width: 100%; height: 100%; object-fit: cover;
+      filter: grayscale(40%);
+    }
+    .log-attachment-thumb-placeholder {
+      color: var(--silver-dim); opacity: 0.35;
+    }
+    .log-attachment-info {}
+    .log-attachment-label {
+      font-family: var(--fw-mono); font-size: 7px;
+      letter-spacing: 0.22em; color: var(--silver-dim);
+      text-transform: uppercase; margin-bottom: 4px;
+    }
+    .log-attachment-name {
+      font-family: var(--fw-code); font-size: 12px;
+      letter-spacing: 0.06em; color: var(--silver);
+    }
+    .log-attachment-meta {
+      font-family: var(--fw-mono); font-size: 7px;
+      letter-spacing: 0.12em; color: var(--silver-dim);
+      margin-top: 3px; opacity: 0.6;
+    }
+
+    .log-footer {
+      border-top: 1px solid rgba(192,192,192,0.1);
+      padding: 8px 20px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       LAYOUT 3 — COMMS INTERCEPT (OOC / Casual)
+    ═══════════════════════════════════════════════════════ */
+    .intercept {
+      border: 1px solid rgba(192,192,192,0.14);
+      background: rgba(26,29,31,0.7);
+      position: relative;
+    }
+    /* FUI corner brackets */
+    .intercept-bracket {
+      position: absolute;
+      width: 10px; height: 10px;
+      pointer-events: none;
+    }
+    .intercept-bracket::before, .intercept-bracket::after {
+      content: '';
+      position: absolute;
+      background: var(--silver-dim);
+      opacity: 0.4;
+    }
+    .intercept-bracket.tl { top: 6px; left: 6px; }
+    .intercept-bracket.tl::before { width: 1px; height: 10px; top: 0; left: 0; }
+    .intercept-bracket.tl::after  { width: 10px; height: 1px; top: 0; left: 0; }
+    .intercept-bracket.tr { top: 6px; right: 6px; }
+    .intercept-bracket.tr::before { width: 1px; height: 10px; top: 0; right: 0; }
+    .intercept-bracket.tr::after  { width: 10px; height: 1px; top: 0; right: 0; }
+    .intercept-bracket.bl { bottom: 6px; left: 6px; }
+    .intercept-bracket.bl::before { width: 1px; height: 10px; bottom: 0; left: 0; }
+    .intercept-bracket.bl::after  { width: 10px; height: 1px; bottom: 0; left: 0; }
+    .intercept-bracket.br { bottom: 6px; right: 6px; }
+    .intercept-bracket.br::before { width: 1px; height: 10px; bottom: 0; right: 0; }
+    .intercept-bracket.br::after  { width: 10px; height: 1px; bottom: 0; right: 0; }
+
+    .intercept-header {
+      padding: 14px 18px 10px;
+      display: flex; align-items: center; gap: 14px;
+      border-bottom: 1px solid rgba(192,192,192,0.08);
+    }
+    .intercept-avatar {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      border: 1px solid rgba(192,192,192,0.25);
+      background: var(--charcoal-3);
+      overflow: hidden; flex-shrink: 0;
+      position: relative;
+    }
+    .intercept-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .intercept-avatar-placeholder {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--fw-mono); font-size: 13px;
+      color: var(--silver-dim); opacity: 0.5;
+    }
+    .intercept-header-info { flex: 1; }
+    .intercept-signal-label {
+      font-family: var(--fw-mono); font-size: 7px;
+      letter-spacing: 0.22em; color: var(--silver-dim);
+      text-transform: uppercase; margin-bottom: 3px;
+    }
+    .intercept-signal-label span {
+      color: var(--green); animation: pulse 2s infinite;
+    }
+    .intercept-sender {
+      font-family: var(--fw-display); font-size: 13px;
+      font-weight: 600; letter-spacing: 0.18em;
+      color: var(--silver-hi); text-transform: uppercase;
+    }
+    .intercept-timestamp {
+      font-family: var(--fw-mono); font-size: 7px;
+      letter-spacing: 0.14em; color: var(--silver-dim); opacity: 0.5;
+      text-transform: uppercase; margin-top: 1px;
+    }
+
+    .intercept-body {
+      padding: 14px 18px;
+      font-family: var(--fw-serif);
+      font-size: 15px; line-height: 1.75;
+      color: rgba(192,192,192,0.78);
+    }
+    .intercept-body p { margin-bottom: 8px; }
+    .intercept-body p:last-child { margin-bottom: 0; }
+
+    .intercept-footer {
+      padding: 8px 18px 10px;
+      border-top: 1px solid rgba(192,192,192,0.06);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .intercept-freq {
+      font-family: var(--fw-mono); font-size: 7px;
+      letter-spacing: 0.14em; color: var(--silver-dim); opacity: 0.4;
+      text-transform: uppercase;
+    }
+    .intercept-signal-bar {
+      display: flex; align-items: flex-end; gap: 2px;
+    }
+    .intercept-signal-bar span {
+      width: 3px; background: var(--silver-dim); opacity: 0.3;
+    }
+    .intercept-signal-bar span:nth-child(-n+4) { opacity: 0.7; }
+
+    /* ─── SHARED FOOTER ACTIONS ────────────────────────────── */
+    .post-actions {
+      display: flex; align-items: center; gap: 0;
+    }
+    .post-action-btn {
+      font-family: var(--fw-mono); font-size: 7px;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--silver-dim);
+      background: transparent; border: none;
+      padding: 4px 10px; cursor: pointer;
+      border-left: 1px solid rgba(192,192,192,0.1);
+      transition: color 0.2s, background 0.2s;
+      display: flex; align-items: center; gap: 5px;
+    }
+    .post-action-btn:first-child { border-left: none; }
+    .post-action-btn:hover { color: var(--silver); background: rgba(192,192,192,0.04); }
+
+    /* ─── EMPTY STATE ──────────────────────────────────────── */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      display: none;
+    }
+    .empty-state.show { display: block; }
+    .empty-state-title {
+      font-family: var(--fw-display); font-size: 14px;
+      letter-spacing: 0.3em; color: var(--silver-dim);
+      text-transform: uppercase; margin-bottom: 8px;
+    }
+    .empty-state-sub {
+      font-family: var(--fw-mono); font-size: 8px;
+      letter-spacing: 0.2em; color: var(--silver-dim);
+      opacity: 0.4; text-transform: uppercase;
+    }
+
+    /* ─── TOAST ────────────────────────────────────────────── */
+    .toast {
+      position: fixed; bottom: 28px; left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--charcoal-3);
+      border: 1px solid var(--silver-dim);
+      border-left: 3px solid var(--plum);
+      color: var(--silver);
+      font-family: var(--fw-mono); font-size: 9px;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      padding: 11px 20px;
+      white-space: nowrap;
+      opacity: 0; pointer-events: none; z-index: 500;
+      transition: opacity 0.3s, transform 0.3s;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ─── RESPONSIVE ───────────────────────────────────────── */
+    @media (max-width: 640px) {
+      .page-wrap { padding: 16px 12px 50px; }
+
+      .topnav { padding: 0 14px; height: 48px; }
+      .topnav-logo-text { font-size: 11px; letter-spacing: 0.2em; }
+      .topnav-divider { margin: 0 10px; }
+      .topnav-operative { display: none; }
+      .topnav-tabs { gap: 0; }
+      .topnav-tab { padding: 5px 10px; font-size: 8px; letter-spacing: 0.12em; }
+
+      .dossier-body { grid-template-columns: 120px 1fr; }
+      .dossier-portrait { min-height: 200px; }
+      .dossier-portrait-placeholder { height: 200px; }
+      .dossier-name { font-size: 14px; }
+      .dossier-field-value { font-size: 11px; }
+
+      .log-title { font-size: 17px; }
+      .log-body { font-size: 14px; }
+      .log-meta-bar { gap: 10px; }
+
+      .intercept-body { font-size: 14px; }
+    }
+
+    @media (max-width: 420px) {
+      .dossier-body { grid-template-columns: 100px 1fr; }
+      .dossier-name { font-size: 12px; letter-spacing: 0.1em; }
+      .dossier-data { padding: 14px 14px; }
+      .log-title { font-size: 15px; }
+      .log-attachment { flex-direction: column; gap: 8px; }
+      .topnav-tab { padding: 5px 8px; font-size: 7px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── TOP NAVIGATION ──────────────────────────────────── -->
+  <nav class="topnav">
+    <a class="topnav-logo" href="#">
+      <img src="assets/rlogo.png" alt="Ravenoir" onerror="this.style.display='none'" />
+      <span class="topnav-logo-text">Ravenoir</span>
+    </a>
+    <div class="topnav-divider"></div>
+    <div class="topnav-tabs">
+      <button class="topnav-tab active" data-feed="all">All Archives</button>
+      <button class="topnav-tab" data-feed="dossier">Dossiers</button>
+      <button class="topnav-tab" data-feed="log">Encrypted Logs</button>
+      <button class="topnav-tab" data-feed="intercept">Comms Intercept</button>
+    </div>
+    <div class="topnav-right">
+      <div class="topnav-dot"></div>
+      <div class="topnav-operative">OPERATIVE: <span id="navOperative">—</span></div>
+      <button class="topnav-logout" id="logoutBtn">⌐ DISCONNECT</button>
+    </div>
+  </nav>
+
+  <!-- ── PAGE ─────────────────────────────────────────────── -->
+  <div class="page-wrap">
+
+    <div class="section-header">
+      <div class="section-header-line"></div>
+      <div class="section-header-label" id="feedLabel">OBSIDIAN ARCHIVE ▸ ALL TRANSMISSIONS</div>
+      <div class="section-header-line right"></div>
+    </div>
+
+    <!-- ── FEED ─────────────────────────────────────────────── -->
+    <div class="feed" id="archiveFeed">
+
+      <!-- ══ POST 1: DOSSIER ══════════════════════════════════ -->
+      <article class="post dossier" data-type="dossier">
+        <div class="dossier-stripe">
+          <span class="dossier-stripe-tag">Personnel File ▸ Dossier</span>
+          <span class="dossier-stripe-id">FILE-ID: DOS-0047</span>
+        </div>
+        <div class="dossier-body">
+          <!-- Portrait -->
+          <div class="dossier-portrait">
+            <!-- Replace src with character portrait image -->
+            <div class="dossier-portrait-placeholder">
+              <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+                <circle cx="20" cy="14" r="7" stroke="#7A7A7A" stroke-width="1.2"/>
+                <path d="M6 36c0-7.7 6.3-14 14-14s14 6.3 14 14" stroke="#7A7A7A" stroke-width="1.2" stroke-linecap="round"/>
+              </svg>
+              <span class="dossier-portrait-placeholder-text">Portrait ▸ Upload</span>
+            </div>
+            <!-- Scanning reticle overlay -->
+            <div class="reticle">
+              <div class="reticle-corner tl"></div>
+              <div class="reticle-corner tr"></div>
+              <div class="reticle-corner bl"></div>
+              <div class="reticle-corner br"></div>
+              <div class="reticle-scan"></div>
+            </div>
+            <div class="dossier-status-badge">
+              <div class="dossier-status-dot"></div>
+              STATUS: ACTIVE
+            </div>
+          </div>
+          <!-- Data fields -->
+          <div class="dossier-data">
+            <div class="dossier-name">Operative Name Here</div>
+            <div class="dossier-field">
+              <div class="dossier-field-label">Clearance Level</div>
+              <div class="dossier-field-value clearance-high">OBSIDIAN — TIER IV</div>
+            </div>
+            <div class="dossier-field">
+              <div class="dossier-field-label">Assignment</div>
+              <div class="dossier-field-value">Field Operations ▸ R-Network Southern Sector</div>
+            </div>
+            <div class="dossier-field">
+              <div class="dossier-field-label">Faction / Affiliation</div>
+              <div class="dossier-field-value">Ravenoir Estate ▸ Lumière Division</div>
+            </div>
+            <div class="dossier-field">
+              <div class="dossier-field-label">Threat Level</div>
+              <div class="dossier-field-value threat-critical">■ CRITICAL — APPROACH WITH CAUTION</div>
+            </div>
+          </div>
+        </div>
+        <div class="dossier-footer">
+          <div class="dossier-footer-code">ARCHIVE-375 ▸ CLASSIFIED ▸ R-NETWORK</div>
+          <div class="post-actions">
+            <button class="post-action-btn">▸ VIEW FULL DOSSIER</button>
+            <button class="post-action-btn">⊞ ATTACH EVIDENCE</button>
+          </div>
+        </div>
+      </article>
+
+      <!-- ══ POST 2: ENCRYPTED LOG ════════════════════════════ -->
+      <article class="post log" data-type="log">
+        <div class="log-header">
+          <div class="log-grade-tag">
+            <span class="log-mil-badge">MILITARY GRADE</span>
+            <span class="log-grade-text">Encrypted Log ▸ Lore Entry</span>
+          </div>
+          <div class="log-meta-bar">
+            <div class="log-meta-item">TIMESTAMP: <span>2026-03-29 // 02:41 UTC</span></div>
+            <div class="log-meta-item">LOCATION: <span>THE VOID ▸ SECTOR 7</span></div>
+            <div class="log-meta-item">AUTHOR: <span>REDACTED</span></div>
+            <div class="log-meta-item">REF: <span>CHRON-0012</span></div>
+          </div>
+        </div>
+        <div class="log-title">The Night The Archive Burned</div>
+        <div class="log-body">
+          <p>
+            The transmission came in at <span class="redacted" title="Click to reveal">03:17 local time</span>, 
+            three minutes before the scheduled blackout. I had been watching the feeds from 
+            <span class="redacted" title="Click to reveal">Sub-level 4, Corridor 9</span> when the signal dropped — 
+            not a graceful disconnect, but a hard cut, the kind that leaves static and a faint 
+            chemical smell in the memory of the system.
+          </p>
+          <p>
+            By the time <span class="redacted" title="Click to reveal">Agent Mireille</span> reached the terminal room, 
+            the fire had already consumed the eastern archive wall. Not the digital records — those are mirrored 
+            across <span class="redacted" title="Click to reveal">eleven nodes</span> in the R-Network — 
+            but the physical originals. The ones that could not be copied. 
+            The ones that were never meant to exist in the first place.
+          </p>
+          <p>
+            Someone inside knew exactly what they were burning. And they knew we would come looking.
+          </p>
+        </div>
+        <div class="log-attachment">
+          <div class="log-attachment-thumb">
+            <!-- Replace with actual evidence image -->
+            <div class="log-attachment-thumb-placeholder">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <rect x="3" y="3" width="18" height="18" rx="1" stroke="#7A7A7A" stroke-width="1.2"/>
+                <circle cx="8.5" cy="8.5" r="1.5" fill="#7A7A7A"/>
+                <path d="M3 15l5-5 4 4 3-3 6 6" stroke="#7A7A7A" stroke-width="1.2" stroke-linecap="round"/>
+              </svg>
+            </div>
+          </div>
+          <div class="log-attachment-info">
+            <div class="log-attachment-label">Evidence Attachment</div>
+            <div class="log-attachment-name">ARCHIVE-BREACH-PHOTO-001.JPG</div>
+            <div class="log-attachment-meta">CLASSIFIED ▸ ATTACH ACTUAL SCENE IMAGE HERE</div>
+          </div>
+        </div>
+        <div class="log-footer">
+          <div class="post-meta-row">
+            <div class="post-meta-avatar">
+              <!-- Author avatar placeholder -->
+            </div>
+            <div class="post-meta-text">Posted by SCRIBE-07 ▸ 2026-03-29</div>
+          </div>
+          <div class="post-actions">
+            <button class="post-action-btn">▸ EXPAND LOG</button>
+            <button class="post-action-btn">⊞ ADD ATTACHMENT</button>
+          </div>
+        </div>
+      </article>
+
+      <!-- ══ POST 3: COMMS INTERCEPT ═══════════════════════════ -->
+      <article class="post intercept" data-type="intercept">
+        <div class="intercept-bracket tl"></div>
+        <div class="intercept-bracket tr"></div>
+        <div class="intercept-bracket bl"></div>
+        <div class="intercept-bracket br"></div>
+        <div class="intercept-header">
+          <div class="intercept-avatar">
+            <!-- Replace with member avatar image -->
+            <div class="intercept-avatar-placeholder">?</div>
+          </div>
+          <div class="intercept-header-info">
+            <div class="intercept-signal-label">[ <span>◈</span> INCOMING_TRANSMISSION ]</div>
+            <div class="intercept-sender">Operative Callsign Here</div>
+            <div class="intercept-timestamp">FREQ: OOC-01 ▸ 2026-03-29 ▸ 14:22 UTC</div>
+          </div>
+        </div>
+        <div class="intercept-body">
+          <p>
+            Hey everyone — OOC heads up! We're planning a joint plot event this Saturday evening. 
+            If your character has any connection to the Lumière subplot, now is the time to get involved.
+          </p>
+          <p>
+            Drop your callsign below if you're in. No pressure, all welcome. 
+            This one's going to be low-stakes entry, high-stakes exit. 👁️
+          </p>
+        </div>
+        <div class="intercept-footer">
+          <div class="intercept-freq">SIGNAL: OOC ▸ UNENCRYPTED ▸ BULLETIN BOARD</div>
+          <div class="intercept-signal-bar">
+            <span style="height:4px"></span>
+            <span style="height:6px"></span>
+            <span style="height:9px"></span>
+            <span style="height:12px"></span>
+            <span style="height:8px"></span>
+            <span style="height:5px"></span>
+          </div>
+        </div>
+      </article>
+
+      <!-- ══ POST 4: SECOND DOSSIER ════════════════════════════ -->
+      <article class="post dossier" data-type="dossier">
+        <div class="dossier-stripe">
+          <span class="dossier-stripe-tag">Personnel File ▸ Dossier</span>
+          <span class="dossier-stripe-id">FILE-ID: DOS-0048</span>
+        </div>
+        <div class="dossier-body">
+          <div class="dossier-portrait">
+            <div class="dossier-portrait-placeholder">
+              <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+                <circle cx="20" cy="14" r="7" stroke="#7A7A7A" stroke-width="1.2"/>
+                <path d="M6 36c0-7.7 6.3-14 14-14s14 6.3 14 14" stroke="#7A7A7A" stroke-width="1.2" stroke-linecap="round"/>
+              </svg>
+              <span class="dossier-portrait-placeholder-text">Portrait ▸ Upload</span>
+            </div>
+            <div class="reticle">
+              <div class="reticle-corner tl"></div>
+              <div class="reticle-corner tr"></div>
+              <div class="reticle-corner bl"></div>
+              <div class="reticle-corner br"></div>
+              <div class="reticle-scan"></div>
+            </div>
+            <div class="dossier-status-badge" style="background:rgba(139,26,26,0.15);border-color:#8B1A1A;color:#c04040;">
+              <div class="dossier-status-dot" style="background:#c04040;box-shadow:0 0 4px #c04040;"></div>
+              STATUS: INACTIVE
+            </div>
+          </div>
+          <div class="dossier-data">
+            <div class="dossier-name">Second Operative Here</div>
+            <div class="dossier-field">
+              <div class="dossier-field-label">Clearance Level</div>
+              <div class="dossier-field-value" style="color:var(--silver-dim)">RESTRICTED — TIER II</div>
+            </div>
+            <div class="dossier-field">
+              <div class="dossier-field-label">Assignment</div>
+              <div class="dossier-field-value">Intelligence Analyst ▸ Obsidian Vault</div>
+            </div>
+            <div class="dossier-field">
+              <div class="dossier-field-label">Faction / Affiliation</div>
+              <div class="dossier-field-value">Ravenoir Estate ▸ Information Directorate</div>
+            </div>
+            <div class="dossier-field">
+              <div class="dossier-field-label">Threat Level</div>
+              <div class="dossier-field-value threat-moderate">■ MODERATE — VERIFIED PERSONNEL</div>
+            </div>
+          </div>
+        </div>
+        <div class="dossier-footer">
+          <div class="dossier-footer-code">ARCHIVE-375 ▸ CLASSIFIED ▸ R-NETWORK</div>
+          <div class="post-actions">
+            <button class="post-action-btn">▸ VIEW FULL DOSSIER</button>
+            <button class="post-action-btn">⊞ ATTACH EVIDENCE</button>
+          </div>
+        </div>
+      </article>
+
+      <!-- ══ POST 5: SECOND LOG ════════════════════════════════ -->
+      <article class="post log" data-type="log">
+        <div class="log-header">
+          <div class="log-grade-tag">
+            <span class="log-mil-badge">MILITARY GRADE</span>
+            <span class="log-grade-text">Encrypted Log ▸ Plot Update</span>
+          </div>
+          <div class="log-meta-bar">
+            <div class="log-meta-item">TIMESTAMP: <span>2026-03-28 // 22:15 UTC</span></div>
+            <div class="log-meta-item">LOCATION: <span>RAVENOIR ESTATE ▸ NORTH WING</span></div>
+            <div class="log-meta-item">AUTHOR: <span>COMMAND-01</span></div>
+            <div class="log-meta-item">REF: <span>PLOT-0031</span></div>
+          </div>
+        </div>
+        <div class="log-title">Directive: Operation Pale Raven</div>
+        <div class="log-body">
+          <p>
+            Effective immediately, all operatives with <span class="redacted" title="Click to reveal">Tier III clearance or above</span> 
+            are to cease contact with the <span class="redacted" title="Click to reveal">Soleil Faction</span>. 
+            Intelligence suggests their council has been <span class="redacted" title="Click to reveal">compromised by an external broker</span> 
+            whose identity remains under investigation.
+          </p>
+          <p>
+            This is not a social directive. This is an operational one. 
+            Anyone maintaining contact without written authorization from <span class="redacted" title="Click to reveal">R-Network Command</span> 
+            will be considered a liability and handled accordingly.
+          </p>
+        </div>
+        <div class="log-attachment">
+          <div class="log-attachment-thumb">
+            <div class="log-attachment-thumb-placeholder">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <rect x="3" y="3" width="18" height="18" rx="1" stroke="#7A7A7A" stroke-width="1.2"/>
+                <circle cx="8.5" cy="8.5" r="1.5" fill="#7A7A7A"/>
+                <path d="M3 15l5-5 4 4 3-3 6 6" stroke="#7A7A7A" stroke-width="1.2" stroke-linecap="round"/>
+              </svg>
+            </div>
+          </div>
+          <div class="log-attachment-info">
+            <div class="log-attachment-label">Evidence Attachment</div>
+            <div class="log-attachment-name">DIRECTIVE-PALE-RAVEN.PDF</div>
+            <div class="log-attachment-meta">CLASSIFIED ▸ ATTACH DOCUMENT IMAGE HERE</div>
+          </div>
+        </div>
+        <div class="log-footer">
+          <div class="post-meta-row">
+            <div class="post-meta-avatar"></div>
+            <div class="post-meta-text">Posted by COMMAND-01 ▸ 2026-03-28</div>
+          </div>
+          <div class="post-actions">
+            <button class="post-action-btn">▸ EXPAND LOG</button>
+            <button class="post-action-btn">⊞ ADD ATTACHMENT</button>
+          </div>
+        </div>
+      </article>
+
+      <!-- ══ POST 6: SECOND INTERCEPT ═══════════════════════════ -->
+      <article class="post intercept" data-type="intercept">
+        <div class="intercept-bracket tl"></div>
+        <div class="intercept-bracket tr"></div>
+        <div class="intercept-bracket bl"></div>
+        <div class="intercept-bracket br"></div>
+        <div class="intercept-header">
+          <div class="intercept-avatar">
+            <div class="intercept-avatar-placeholder">?</div>
+          </div>
+          <div class="intercept-header-info">
+            <div class="intercept-signal-label">[ <span>◈</span> INCOMING_TRANSMISSION ]</div>
+            <div class="intercept-sender">Second Operative Here</div>
+            <div class="intercept-timestamp">FREQ: OOC-01 ▸ 2026-03-28 ▸ 09:05 UTC</div>
+          </div>
+        </div>
+        <div class="intercept-body">
+          <p>Quick OOC note — I'll be away this weekend so I won't be able to participate in the Saturday event. Feel free to NPC my character as needed, just keep them background for now. See everyone Monday! 🕊️</p>
+        </div>
+        <div class="intercept-footer">
+          <div class="intercept-freq">SIGNAL: OOC ▸ UNENCRYPTED ▸ BULLETIN BOARD</div>
+          <div class="intercept-signal-bar">
+            <span style="height:4px"></span>
+            <span style="height:7px"></span>
+            <span style="height:10px"></span>
+            <span style="height:7px"></span>
+            <span style="height:4px"></span>
+            <span style="height:3px"></span>
+          </div>
+        </div>
+      </article>
+
+    </div><!-- /.feed -->
+
+    <div class="empty-state" id="emptyState">
+      <div class="empty-state-title">No Transmissions Found</div>
+      <div class="empty-state-sub">Archive query returned zero matches ▸ Adjust filter parameters</div>
+    </div>
+
+  </div><!-- /.page-wrap -->
+
+  <div class="toast" id="toastMsg"></div>
+
+  <script>
+  /* ─── Read operative name from sessionStorage ─────────── */
+  const operativeName = sessionStorage.getItem('ravenoir_operative') || 'UNKNOWN';
+  document.getElementById('navOperative').textContent = operativeName.toUpperCase();
+
+  /* ─── Filter tabs ──────────────────────────────────────── */
+  const tabs     = document.querySelectorAll('.topnav-tab');
+  const posts    = document.querySelectorAll('.post');
+  const feedLbl  = document.getElementById('feedLabel');
+  const emptyState = document.getElementById('emptyState');
+  const feed     = document.getElementById('archiveFeed');
+
+  const labelMap = {
+    all:       'OBSIDIAN ARCHIVE ▸ ALL TRANSMISSIONS',
+    dossier:   'OBSIDIAN ARCHIVE ▸ PERSONNEL FILES',
+    log:       'OBSIDIAN ARCHIVE ▸ ENCRYPTED LOGS',
+    intercept: 'OBSIDIAN ARCHIVE ▸ COMMS INTERCEPTS',
+  };
+
+  function filterFeed(type) {
+    let visible = 0;
+    posts.forEach((post, i) => {
+      const match = type === 'all' || post.dataset.type === type;
+      if (match) {
+        post.style.display = '';
+        // Re-trigger slide-up animation
+        post.style.animation = 'none';
+        void post.offsetWidth;
+        post.style.animationDelay = (visible * 0.1) + 's';
+        post.style.animation = 'slideUp 0.5s cubic-bezier(0.22,1,0.36,1) forwards';
+        visible++;
+      } else {
+        post.style.display = 'none';
+      }
+    });
+    feedLbl.textContent = labelMap[type] || labelMap.all;
+    emptyState.classList.toggle('show', visible === 0);
+  }
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      filterFeed(tab.dataset.feed);
+    });
+  });
+
+  /* ─── Redacted hover/click ─────────────────────────────── */
+  document.querySelectorAll('.redacted').forEach(el => {
+    el.addEventListener('click', () => el.classList.toggle('revealed'));
+  });
+
+  /* ─── Logout ───────────────────────────────────────────── */
+  document.getElementById('logoutBtn').addEventListener('click', () => {
+    sessionStorage.removeItem('ravenoir_operative');
+    window.location.href = 'index.html';
+  });
+
+  /* ─── Toast ────────────────────────────────────────────── */
+  const toastEl = document.getElementById('toastMsg');
+  let toastTimer = null;
+  function showToast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.remove('show'), 3000);
+  }
+
+  /* Action buttons — placeholder handlers */
+  document.querySelectorAll('.post-action-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      showToast('BACKEND INTEGRATION PENDING ▸ FEATURE IN DEVELOPMENT');
+    });
+  });
+  </script>
+</body>
+</html>
